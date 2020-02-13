@@ -1,5 +1,10 @@
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
+##Management System
+This project is Customer management system, coded with react.js.
+
+I made this project to learn react.js, furthermore, to develop webserver_learning project with awesome design.
+
 ## Available Scripts
 
 In the project directory, you can run:
