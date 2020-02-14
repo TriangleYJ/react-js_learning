@@ -11,7 +11,9 @@ const data = fs.readFileSync('./database.json');
 const conf = JSON.parse(data);
 const mysql = require('mysql');
 
-const connection = mysql.createConnection({
+/*const connection = mysql.createConnection();*/
+
+let pool = mysql.createPool({
     host: conf.host,
     user: conf.user,
     password: conf.password,
@@ -19,17 +21,48 @@ const connection = mysql.createConnection({
     database: conf.database
 });
 
-connection.connect();
-
-connection.on('error', function(){});
+const multer = require('multer');
+const upload = multer({dest: './upload'});
 
 app.get('/api/customers', (req, res) => {
-    connection.query(
-        "SELECT * FROM CUSTOMER",
-        (err, rows, fields) => {
-            res.send(rows);
+    pool.getConnection(function(err, connection){
+        if (err) {
+            console.error('mysql connection error :' + err);
+        } else {
+            console.info('mysql is connected successfully.');
+            connection.query(
+                "SELECT * FROM CUSTOMER",
+                (err, rows, fields) => {
+                    res.send(rows);
+                }
+            );
+            connection.release();
         }
-    );
+    });
+});
+
+app.use('/image', express.static('./upload'));
+
+app.post('/api/customers', upload.single('image'), (req, res) => {
+    let sql = 'INSERT INTO CUSTOMER VALUES (null, ?, ?, ?, ?, ?)';
+    let image = '/image/' + req.file.filename;
+    let name = req.body.name;
+    let birthday = req.body.birthday;
+    let gender = req.body.gender;
+    let job = req.body.job;
+    let params=[image, name, birthday, gender, job];
+
+    pool.getConnection(function(err, connection){
+        if (err) {
+            console.error('mysql connection error :' + err);
+        } else {
+            console.info('mysql is connected successfully.');
+            connection.query(sql, params, (err, rows, field) => {
+                res.send(rows);
+            });
+            connection.release();
+        }
+    });
 });
 
 app.listen(port, () => console.log(`Listenen on ${port} port!`));
