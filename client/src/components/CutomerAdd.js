@@ -19,6 +19,7 @@ class CustomerAdd extends React.Component {
         this.addCustomer()
             .then(res => {
                 console.log(res.data);
+                this.props.stateRefresh();
             });
 
         this.setState({
@@ -29,7 +30,7 @@ class CustomerAdd extends React.Component {
             job: '',
             fleName: ''
         })
-        window.location.reload();
+
     };
 
     handleFileChange = e => {
