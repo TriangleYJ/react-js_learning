@@ -29,13 +29,13 @@ app.get('/api/customers', (req, res) => {
         if (err) {
             console.error('mysql connection error :' + err);
         } else {
-            console.info('mysql is connected successfully.');
             connection.query(
-                "SELECT * FROM CUSTOMER",
+                "SELECT * FROM CUSTOMER WHERE isDeleted = 0",
                 (err, rows, fields) => {
                     res.send(rows);
                 }
             );
+            console.info('data loaded from mysql successfully.');
             connection.release();
         }
     });
@@ -44,7 +44,7 @@ app.get('/api/customers', (req, res) => {
 app.use('/image', express.static('./upload'));
 
 app.post('/api/customers', upload.single('image'), (req, res) => {
-    let sql = 'INSERT INTO CUSTOMER VALUES (null, ?, ?, ?, ?, ?)';
+    let sql = 'INSERT INTO CUSTOMER VALUES (null, ?, ?, ?, ?, ?, now(), 0)';
     let image = '/image/' + req.file.filename;
     let name = req.body.name;
     let birthday = req.body.birthday;
@@ -56,10 +56,26 @@ app.post('/api/customers', upload.single('image'), (req, res) => {
         if (err) {
             console.error('mysql connection error :' + err);
         } else {
-            console.info('mysql is connected successfully.');
             connection.query(sql, params, (err, rows, field) => {
                 res.send(rows);
             });
+            console.info('data added to mysql successfully');
+            connection.release();
+        }
+    });
+});
+
+app.delete('/api/customers/:id', (req, res) => {
+    let sql = 'UPDATE CUSTOMER SET isDeleted = 1 WHERE id = ?';
+    let params = [req.params.id];
+    pool.getConnection(function(err, connection){
+        if (err) {
+            console.error('mysql connection error :' + err);
+        } else {
+            connection.query(sql, params, (err, rows, field) => {
+                res.send(rows);
+            });
+            console.info('data removed from mysql successfully.');
             connection.release();
         }
     });
